@@ -9,7 +9,7 @@ on:
 
 env:
   PORT: 5001
-  IMAGE: {{ vars.IMAGE }}
+  IMAGE: byreshk/gcp-poc-cicd:v1
 jobs:
   test:
     runs-on: ubuntu-latest
