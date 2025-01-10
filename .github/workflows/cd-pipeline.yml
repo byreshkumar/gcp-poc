@@ -9,7 +9,7 @@ on:
 
 env:
   PORT: 5001
-  IMAGE: byreshk/gcp-poc-cicd:v1
+  IMAGE: ${{vars.IMAGE}}
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -69,7 +69,7 @@ jobs:
           --platform "managed" \
           --allow-unauthenticated \
           --tag production \
-          --revision-suffix=prod-${{github.sha}}
+          --revision-suffix=prod-latest
 
       - name: Deploy to GCP Run - Staging environment
         if: github.ref != 'refs/heads/main'
@@ -83,4 +83,4 @@ jobs:
           --platform "managed" \
           --allow-unauthenticated \
           --tag staging \
-          --revision-suffix=staging-v1
+          --revision-suffix=staging-latest
