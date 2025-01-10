@@ -83,4 +83,4 @@ jobs:
           --platform "managed" \
           --allow-unauthenticated \
           --tag staging \
-          --revision-suffix=staging-${{github.sha}}
+          --revision-suffix=staging-v1
