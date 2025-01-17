@@ -74,19 +74,35 @@ jobs:
         run: |
           docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
       
-      - name: 'Create Cloud Deploy delivery pipeline'
-        run: |-
-          gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
+      - name: create a gke cluster
+        run: |
+          gcloud container clusters create hello-cluster
+      
+      - name: connect to gke cluster
+        run: |
+          gcloud container clusters get-credentials hello-cluster --region ${{vars.GCR_REGION}}
+      
+      - name: create k8s deployment
+        run: |
+          kubectl create deployment hello-app --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      
+      - name: Pull the image from GCR
+        run: |
+          docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      
+      # - name: 'Create Cloud Deploy delivery pipeline'
+        # run: |-
+          # gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
           
-      - name: 'Create release name'
-        run: |-
-          echo "RELEASE_NAME=${{ env.APP }}-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> ${GITHUB_ENV}
+      # - name: 'Create release name'
+        # run: |-
+          # echo "RELEASE_NAME=${{ env.APP }}-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> ${GITHUB_ENV}
           
-      - name: Create release to Cloud Deploy
-        uses: gcp-clouddeploy-ecosystem/release-clouddeploy@main
-        with:
-          release: release-01
-          delivery-pipeline: my-gke-demo-app-1
+      # - name: Create release to Cloud Deploy
+        # uses: gcp-clouddeploy-ecosystem/release-clouddeploy@main
+        # with:
+          # release: release-01
+          # delivery-pipeline: my-gke-demo-app-1
       
       # - name: 'Create Cloud Deploy release'
         # id: 'release'
@@ -99,10 +115,10 @@ jobs:
           # skaffold_file: 'config/skaffold.yaml'
           # images: 'app=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
 
-      - name: 'Report Cloud Deploy release'
-        run: |-
-          echo "Created release ${{ steps.release.outputs.name }} "
-          echo "Release link ${{ steps.release.outputs.link }} "
+      # - name: 'Report Cloud Deploy release'
+        # run: |-
+          # echo "Created release ${{ steps.release.outputs.name }} "
+          # echo "Release link ${{ steps.release.outputs.link }} "
           
       # - name: Enable the Billing API
         # run: |
