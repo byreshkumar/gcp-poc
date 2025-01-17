@@ -55,7 +55,11 @@ jobs:
       - name: Push the image to Docker hub
         run: |
           docker push ${{env.IMAGE}}
-
+       
+      - name: Push the image to GCR
+        run: |
+          docker push ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/${{env.IMAGE}}
+          
       - name: Enable the Billing API
         run: |
           gcloud services enable cloudbilling.googleapis.com --project=${{secrets.GCP_PROJECT_ID}}
