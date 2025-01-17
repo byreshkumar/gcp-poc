@@ -70,6 +70,10 @@ jobs:
         run: |
           docker push ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
           
+      - name: Pull the image from GCR
+        run: |
+          docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      
       - name: 'Create Cloud Deploy delivery pipeline'
         run: |-
           gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
