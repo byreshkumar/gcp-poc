@@ -56,9 +56,14 @@ jobs:
         run: |
           docker push ${{env.IMAGE}}
        
+      - name: Build and tag Image with GCR Repo details
+        run: |
+          #docker build -t ${{env.IMAGE}} .
+          docker tag ${{env.IMAGE}} ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+          
       - name: Push the image to GCR
         run: |
-          docker push ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/${{env.IMAGE}}
+          docker push ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
           
       - name: Enable the Billing API
         run: |
