@@ -76,7 +76,7 @@ jobs:
       
       - name: create a gke cluster
         run: |
-          gcloud container clusters create hello-cluster
+          gcloud container clusters create hello-cluster --region ${{vars.GCR_REGION}}
       
       - name: connect to gke cluster
         run: |
