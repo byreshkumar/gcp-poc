@@ -1,0 +1,24 @@
+# apiVersion: skaffold/v4beta7
+# kind: Config
+# metadata: 
+  # name: deploy-run-quickstart
+# profiles:
+# - name: dev
+  # manifests:
+    # rawYaml:
+    # - run-service-dev.yml
+# - name: prod
+  # manifests:
+    # rawYaml:
+    # - run-service-prod.yml
+# deploy:
+  # #cloudrun: {}
+  # kubectl: {}
+
+apiVersion: skaffold/v4beta7
+kind: Config
+manifests:
+  rawYaml:
+  - k8s-*
+deploy:
+  kubectl: {}  
