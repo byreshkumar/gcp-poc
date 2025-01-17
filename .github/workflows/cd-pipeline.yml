@@ -56,6 +56,10 @@ jobs:
         run: |
           docker push ${{env.IMAGE}}
        
+      - name: Authenticate for GCR
+        run: |
+          gcloud auth configure-docker ${{vars.GCR_REGION}}-docker.pkg.dev
+          
       - name: Build and tag Image with GCR Repo details
         run: |
           #docker build -t ${{env.IMAGE}} .
