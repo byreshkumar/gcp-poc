@@ -10,6 +10,7 @@ on:
 env:
   PORT: 5001
   IMAGE: ${{vars.IMAGE}}:${{github.sha}}
+  APP: app
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -69,29 +70,53 @@ jobs:
         run: |
           docker push ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
           
-      - name: Enable the Billing API
-        run: |
-          gcloud services enable cloudbilling.googleapis.com --project=${{secrets.GCP_PROJECT_ID}}
+      - name: 'Create Cloud Deploy delivery pipeline'
+        run: |-
+          gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
+          
+      - name: 'Create release name'
+        run: |-
+          echo "RELEASE_NAME=${{ env.APP }}-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> ${GITHUB_ENV}
+          
+      - name: 'Create Cloud Deploy release'
+        id: 'release'
+        uses: 'google-github-actions/create-cloud-deploy-release@v0'
+        with:
+          delivery_pipeline: '${{ env.APP }}'
+          name: '${{ env.RELEASE_NAME }}'
+          region: '${{ vars.GCR_REGION }}'
+          description: '${{ env.GITHUB_COMMIT_MSG }}'
+          skaffold_file: 'config/skaffold.yaml'
+          images: 'app=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
 
-      - name: Deploy to GCP Run - Production environment (If a new release was published from the master branch)
-        if: github.event_name == 'release' && github.event.action == 'published' && github.event.release.target_commitish == 'main'
-        run: |
-          gcloud run deploy ${{vars.GCR_PROJECT_NAME}} \
-          --region ${{vars.GCR_REGION}} \
-          --image ${{env.IMAGE}} \
-          --platform "managed" \
-          --allow-unauthenticated \
-          --tag production
+      - name: 'Report Cloud Deploy release'
+        run: |-
+          echo "Created release ${{ steps.release.outputs.name }} "
+          echo "Release link ${{ steps.release.outputs.link }} "
+          
+      # - name: Enable the Billing API
+        # run: |
+          # gcloud services enable cloudbilling.googleapis.com --project=${{secrets.GCP_PROJECT_ID}}
 
-      - name: Deploy to GCP Run - Staging environment
-        if: github.ref != 'refs/heads/main'
-        run: |
-          echo "Deploying to staging environment"
+      # - name: Deploy to GCP Run - Production environment (If a new release was published from the master branch)
+        # if: github.event_name == 'release' && github.event.action == 'published' && github.event.release.target_commitish == 'main'
+        # run: |
+          # gcloud run deploy ${{vars.GCR_PROJECT_NAME}} \
+          # --region ${{vars.GCR_REGION}} \
+          # --image ${{env.IMAGE}} \
+          # --platform "managed" \
+          # --allow-unauthenticated \
+          # --tag production
 
-          # Deploy service with to staging environment
-          gcloud run deploy ${{vars.GCR_STAGING_PROJECT_NAME}} \
-          --region ${{vars.GCR_REGION}} \
-          --image ${{env.IMAGE}} \
-          --platform "managed" \
-          --allow-unauthenticated \
-          --tag staging
+      # - name: Deploy to GCP Run - Staging environment
+        # if: github.ref != 'refs/heads/main'
+        # run: |
+          # echo "Deploying to staging environment"
+
+          # # Deploy service with to staging environment
+          # gcloud run deploy ${{vars.GCR_STAGING_PROJECT_NAME}} \
+          # --region ${{vars.GCR_REGION}} \
+          # --image ${{env.IMAGE}} \
+          # --platform "managed" \
+          # --allow-unauthenticated \
+          # --tag staging
