@@ -78,16 +78,22 @@ jobs:
         run: |-
           echo "RELEASE_NAME=${{ env.APP }}-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> ${GITHUB_ENV}
           
-      - name: 'Create Cloud Deploy release'
-        id: 'release'
-        uses: 'google-github-actions/create-cloud-deploy-release@v0'
+      - name: Create release to Cloud Deploy
+        uses: gcp-clouddeploy-ecosystem/release-clouddeploy@main
         with:
-          delivery_pipeline: 'my-gke-demo-app-1'
-          name: 'release-gke'
-          region: '${{ vars.GCR_REGION }}'
-          description: 'deploy on gke'
-          skaffold_file: 'config/skaffold.yaml'
-          images: 'app=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
+          release: release-01
+          delivery-pipeline: my-gke-demo-app-1
+      
+      # - name: 'Create Cloud Deploy release'
+        # id: 'release'
+        # uses: 'google-github-actions/create-cloud-deploy-release@v0'
+        # with:
+          # delivery_pipeline: 'my-gke-demo-app-1'
+          # name: 'release-gke'
+          # region: '${{ vars.GCR_REGION }}'
+          # description: 'deploy on gke'
+          # skaffold_file: 'config/skaffold.yaml'
+          # images: 'app=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
 
       - name: 'Report Cloud Deploy release'
         run: |-
