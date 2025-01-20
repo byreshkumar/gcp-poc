@@ -74,25 +74,25 @@ jobs:
         run: |
           docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
       
-      - name: create a gke cluster
-        run: |
-          gcloud container clusters create hello-cluster --region ${{vars.GCR_REGION}}
+      # - name: create a gke cluster
+        # run: |
+          # gcloud container clusters create-auto app-cluster --region ${{vars.GCR_REGION}}
       
       - name: connect to gke cluster
         run: |
-          gcloud container clusters get-credentials hello-cluster --region ${{vars.GCR_REGION}}
+          gcloud container clusters get-credentials app-cluster --region ${{vars.GCR_REGION}}
       
       - name: create k8s deployment
         run: |
           kubectl create deployment hello-app --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
       
-      - name: Pull the image from GCR
-        run: |
-          docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      # - name: Pull the image from GCR
+        # run: |
+          # docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
       
-      # - name: 'Create Cloud Deploy delivery pipeline'
-        # run: |-
-          # gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
+      - name: 'Create Cloud Deploy delivery pipeline'
+        run: |-
+          gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
           
       # - name: 'Create release name'
         # run: |-
@@ -104,16 +104,16 @@ jobs:
           # release: release-01
           # delivery-pipeline: my-gke-demo-app-1
       
-      # - name: 'Create Cloud Deploy release'
-        # id: 'release'
-        # uses: 'google-github-actions/create-cloud-deploy-release@v0'
-        # with:
-          # delivery_pipeline: 'my-gke-demo-app-1'
-          # name: 'release-gke'
-          # region: '${{ vars.GCR_REGION }}'
-          # description: 'deploy on gke'
-          # skaffold_file: 'config/skaffold.yaml'
-          # images: 'app=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
+      - name: 'Create Cloud Deploy release'
+        id: 'release'
+        uses: 'google-github-actions/create-cloud-deploy-release@v0'
+        with:
+          delivery_pipeline: 'my-gke-demo-app-1'
+          name: 'release-gke'
+          region: '${{ vars.GCR_REGION }}'
+          description: 'deploy on gke'
+          skaffold_file: 'config/skaffold.yaml'
+          images: 'app=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
 
       # - name: 'Report Cloud Deploy release'
         # run: |-
