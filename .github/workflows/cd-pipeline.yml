@@ -125,7 +125,7 @@ jobs:
         uses: 'google-github-actions/create-cloud-deploy-release@v0'
         with:
           delivery_pipeline: 'my-gke-demo-app-1'
-          name: 'release-gke2'
+          name: 'release-gke3'
           region: '${{ vars.GCR_REGION }}'
           description: 'deploy on gke'
           skaffold_file: 'config/skaffold.yaml'
