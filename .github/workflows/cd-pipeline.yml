@@ -70,6 +70,10 @@ jobs:
         run: |
           docker push ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
           
+      - name: Pull the image from GCR
+        run: |
+          docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      
       # - name: create a gke cluster
         # run: |
           # gcloud container clusters create-auto app-cluster --region ${{vars.GCR_REGION}}
@@ -78,23 +82,83 @@ jobs:
         run: |
           gcloud components install gke-gcloud-auth-plugin
       
-      - name: update kubectl configuration to use plugin and connect to gke cluster
+      - name: check the installed version
+        run: |
+          gke-gcloud-auth-plugin --version
+      
+      - name: update kubectl configuration to use plugin
         run: |
           gcloud container clusters get-credentials app-cluster --region ${{vars.GCR_REGION}}
       
-      - name: assign role to artifact repo to use by gke
+      # - name: connect to gke cluster
+        # run: |
+          # gcloud container clusters get-credentials app-cluster --region ${{vars.GCR_REGION}}
+      
+      # - name: create k8s deployment
+        # run: |
+          # kubectl create deployment hello-app --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      
+      # - name: Pull the image from GCR
+        # run: |
+          # docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      
+      - name: assign role
         run: |
           gcloud artifacts repositories add-iam-policy-binding my-repo --location=us-central1 --member='serviceAccount:gcp-poc-new-sa@watchful-hall-447106-r1.iam.gserviceaccount.com' --role='roles/artifactregistry.reader'
      
-     - name: create deployment
-        run: |
-          kubectl create deployment hello-server --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
-     
-     - name: expose the deployment
-        run: |
-          kubectl expose deployment hello-server --type LoadBalancer --port 80 --target-port 8080
-     
-     - name: get ip from service
-        run: |
-          kubectl get service hello-server    
-     
+      - name: 'Create Cloud Deploy delivery pipeline'
+        run: |-
+          gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
+          
+      # - name: 'Create release name'
+        # run: |-
+          # echo "RELEASE_NAME=${{ env.APP }}-${GITHUB_SHA::7}-${GITHUB_RUN_NUMBER}" >> ${GITHUB_ENV}
+          
+      # - name: Create release to Cloud Deploy
+        # uses: gcp-clouddeploy-ecosystem/release-clouddeploy@main
+        # with:
+          # release: release-01
+          # delivery-pipeline: my-gke-demo-app-1
+      
+      - name: 'Create Cloud Deploy release'
+        id: 'release'
+        uses: 'google-github-actions/create-cloud-deploy-release@v0'
+        with:
+          delivery_pipeline: 'my-gke-demo-app-1'
+          name: 'release-${{github.sha}}'
+          region: '${{ vars.GCR_REGION }}'
+          description: 'deploy on gke'
+          skaffold_file: 'config/skaffold.yaml'
+          images: 'my-app-image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}'
+
+      # - name: 'Report Cloud Deploy release'
+        # run: |-
+          # echo "Created release ${{ steps.release.outputs.name }} "
+          # echo "Release link ${{ steps.release.outputs.link }} "
+          
+      # - name: Enable the Billing API
+        # run: |
+          # gcloud services enable cloudbilling.googleapis.com --project=${{secrets.GCP_PROJECT_ID}}
+
+      # - name: Deploy to GCP Run - Production environment (If a new release was published from the master branch)
+        # if: github.event_name == 'release' && github.event.action == 'published' && github.event.release.target_commitish == 'main'
+        # run: |
+          # gcloud run deploy ${{vars.GCR_PROJECT_NAME}} \
+          # --region ${{vars.GCR_REGION}} \
+          # --image ${{env.IMAGE}} \
+          # --platform "managed" \
+          # --allow-unauthenticated \
+          # --tag production
+
+      # - name: Deploy to GCP Run - Staging environment
+        # if: github.ref != 'refs/heads/main'
+        # run: |
+          # echo "Deploying to staging environment"
+
+          # # Deploy service with to staging environment
+          # gcloud run deploy ${{vars.GCR_STAGING_PROJECT_NAME}} \
+          # --region ${{vars.GCR_REGION}} \
+          # --image ${{env.IMAGE}} \
+          # --platform "managed" \
+          # --allow-unauthenticated \
+          # --tag staging
