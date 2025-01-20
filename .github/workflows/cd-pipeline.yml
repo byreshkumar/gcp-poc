@@ -94,9 +94,9 @@ jobs:
         # run: |
           # gcloud container clusters get-credentials app-cluster --region ${{vars.GCR_REGION}}
       
-      - name: create k8s deployment
-        run: |
-          kubectl create deployment hello-app --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+      # - name: create k8s deployment
+        # run: |
+          # kubectl create deployment hello-app --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
       
       # - name: Pull the image from GCR
         # run: |
