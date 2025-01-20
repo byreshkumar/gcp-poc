@@ -102,6 +102,10 @@ jobs:
         # run: |
           # docker pull ${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
       
+      - name: assign role
+        run: |
+          gcloud artifacts repositories add-iam-policy-binding my-repo --location=us-central1 --member='serviceAccount:gcp-poc-new-sa@watchful-hall-447106-r1.iam.gserviceaccount.com' --role='roles/artifactregistry.reader'
+     
       - name: 'Create Cloud Deploy delivery pipeline'
         run: |-
           gcloud deploy apply --file config/clouddeploy.yaml --region ${{ vars.GCR_REGION }} --project=${{secrets.GCP_PROJECT_ID}}
@@ -121,7 +125,7 @@ jobs:
         uses: 'google-github-actions/create-cloud-deploy-release@v0'
         with:
           delivery_pipeline: 'my-gke-demo-app-1'
-          name: 'release-gke2'
+          name: 'release-gke3'
           region: '${{ vars.GCR_REGION }}'
           description: 'deploy on gke'
           skaffold_file: 'config/skaffold.yaml'
