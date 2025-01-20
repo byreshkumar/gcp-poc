@@ -86,3 +86,15 @@ jobs:
         run: |
           gcloud artifacts repositories add-iam-policy-binding my-repo --location=us-central1 --member='serviceAccount:gcp-poc-new-sa@watchful-hall-447106-r1.iam.gserviceaccount.com' --role='roles/artifactregistry.reader'
      
+     - name: create deployment
+        run: |
+          kubectl create deployment hello-server --image=${{vars.GCR_REGION}}-docker.pkg.dev/${{secrets.GCP_PROJECT_ID}}/${{vars.GCR_REPO}}/testapp:${{github.sha}}
+     
+     - name: expose the deployment
+        run: |
+          kubectl expose deployment hello-server --type LoadBalancer --port 80 --target-port 8080
+     
+     - name: get ip from service
+        run: |
+          kubectl get service hello-server    
+     
