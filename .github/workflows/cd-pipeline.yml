@@ -78,9 +78,21 @@ jobs:
         # run: |
           # gcloud container clusters create-auto app-cluster --region ${{vars.GCR_REGION}}
       
-      - name: connect to gke cluster
+      - name: install gke-gcloud-auth-plugin to use kubectl
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+      
+      - name: check the installed version
+        run: |
+          gke-gcloud-auth-plugin --version
+      
+      - name: update kubectl configuration to use plugin
         run: |
           gcloud container clusters get-credentials app-cluster --region ${{vars.GCR_REGION}}
+      
+      # - name: connect to gke cluster
+        # run: |
+          # gcloud container clusters get-credentials app-cluster --region ${{vars.GCR_REGION}}
       
       - name: create k8s deployment
         run: |
